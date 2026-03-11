@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Plant Disease Detection System</title>
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+    }
+
+    body{
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    header{
+      background: rgba(16, 185, 129, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      color: var(--primary);
+      padding: 15px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 20px;
+      font-weight: 800;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    header a{
+      color: white;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s;
+    }
+
+    header a:hover{
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-1px);
+    }
+
+    .container{
+      max-width: 420px;
+      margin: 60px auto;
+      padding: 20px;
+    }
+
+    .card{
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h2{
+      margin: 0 0 10px 0;
+      color: white;
+      font-size: 24px;
+    }
+
+    p.sub{
+      margin: 0 0 25px 0;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    label{
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="email"], input[type="password"], input[type="text"]{
+      width: 100%;
+      padding: 14px;
+      margin-top: 8px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+
+    input:focus{
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .row{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 15px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .row a{
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .row a:hover{
+      text-decoration: underline;
+    }
+
+    button{
+      width: 100%;
+      padding: 14px 15px;
+      margin-top: 25px;
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover{
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .footer{
+      margin-top: 20px;
+      font-size: 14px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .footer a{
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .footer a:hover{
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>Plant Disease Detection System</div>
+    <a href="index.html">Back to App</a>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h2>User Login</h2>
+      <p class="sub">Sign in to access your saved scans and settings.</p>
+
+      <form id="loginForm">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" placeholder="you@example.com" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="Enter your password" required />
+
+        <div class="row">
+          <label>
+            <input type="checkbox" id="rememberMe" />
+            Remember me
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit">Login</button>
+      </form>
+
+      <div class="footer">
+        New user? <a href="signup.html">Create an account</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      alert("Login submitted. Connect this form to your backend authentication endpoint.");
+    });
+  </script>
+</body>
+</html>

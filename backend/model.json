@@ -1,0 +1,14 @@
+{
+  "class_indices": {
+    "0": "Blight",
+    "1": "Healthy",
+    "2": "Powdery_Mildew",
+    "3": "Rust"
+  },
+  "class_names": [
+    "Blight",
+    "Healthy",
+    "Powdery_Mildew",
+    "Rust"
+  ]
+}

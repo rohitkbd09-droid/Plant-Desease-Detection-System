@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plant Disease Detection System</title>
+
+  <style>
+    :root {
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b);
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+    }
+
+    body{
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    header{
+      background: rgba(16, 185, 129, 0.15);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      color: var(--primary);
+      padding: 20px;
+      text-align: center;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .tabs{
+      display: flex;
+      justify-content: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 15px;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .tab-btn{
+      padding: 12px 20px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(5px);
+    }
+
+    .tab-btn:hover{
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .tab-btn.active{
+      background: var(--primary);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .container{
+      max-width: 950px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .content{
+      display: none;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 30px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .content.active{
+      display: block;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: white;
+      font-weight: 700;
+      border-bottom: 1px solid var(--glass-border);
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    input, select{
+      width: 100%;
+      padding: 14px;
+      margin: 10px 0 20px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 15px;
+      box-sizing: border-box;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    input[type="file"]::file-selector-button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      margin-right: 15px;
+      cursor: pointer;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+    input[type="file"]::file-selector-button:hover {
+      background: var(--primary-hover);
+    }
+
+    button{
+      padding: 12px 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      margin-bottom: 10px;
+    }
+
+    button:hover{
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    button:disabled{
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    #preview{
+      max-width: 300px;
+      display: none;
+      margin: 15px auto;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.1);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      max-height: 300px;
+      object-fit: cover;
+    }
+
+    #uploadStatus{
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      display: none;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    #uploadStatus.active{
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    #uploadStatus.error{
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    #uploadStatus.success{
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #6ee7b7;
+    }
+
+    .result-box{
+      margin-top: 30px;
+      padding: 25px;
+      border-radius: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .result-box h3{
+      margin: 0 0 15px 0;
+      color: var(--primary);
+      font-size: 20px;
+    }
+
+    .result-box p {
+      margin: 10px 0;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .result-box b {
+      color: #cbd5e1;
+    }
+
+    .voice-controls{
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    #recommendation{
+      display: block;
+      white-space: pre-line;
+      margin-top: 8px;
+      padding: 15px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border-left: 4px solid var(--primary);
+    }
+
+    option { background: #1e293b; color: white; }
+  </style>
+</head>
+
+<body>
+
+<header>🌿 Plant Disease Detection System</header>
+
+<div class="tabs">
+  <!-- FIXED: now passing event -->
+  <button class="tab-btn active" onclick="showTab(event,'analysis')">📸 Image Analysis</button>
+  <button class="tab-btn" onclick="showTab(event,'voice')">🎤 Voice Input</button>
+  <button class="tab-btn" onclick="showTab(event,'info')">📊 Information</button>
+  <button class="tab-btn" onclick="showTab(event,'settings')">⚙️ Settings</button>
+</div>
+
+<div class="container">
+
+  <!-- IMAGE ANALYSIS -->
+  <div id="analysis" class="content active">
+    <h2>📸 Upload Leaf Image</h2>
+
+    <input type="file" id="fileInput" accept="image/*" />
+    <img id="preview" alt="Preview" />
+
+    <div id="uploadStatus"></div>
+
+    <button id="analyzeBtn">🔍 Analyze</button>
+
+    <div class="result-box">
+      <h3>Result:</h3>
+      <p><b>Disease:</b> <span id="disease">-</span></p>
+      <p><b>Confidence:</b> <span id="confidence">-</span></p>
+      <p><b>Recommendation:</b> <span id="recommendation">-</span></p>
+
+      <button id="speakBtn">🔊 Speak Result</button>
+      <button id="downloadPdfBtn">📄 Download Report</button>
+    </div>
+  </div>
+
+  <!-- VOICE INPUT -->
+  <div id="voice" class="content">
+    <h2>🎤 Voice Input</h2>
+
+    <div class="voice-controls">
+      <button id="startVoice">▶ Start Listening</button>
+      <button id="stopVoice" disabled>⏹ Stop</button>
+    </div>
+
+    <p id="voiceStatus">Status: Ready</p>
+    <p><b>Detected Speech:</b> <span id="voiceText">-</span></p>
+  </div>
+
+  <!-- INFO -->
+  <div id="info" class="content">
+    <h2>📊 Dashboard</h2>
+    <p><b>Total Analyses:</b> <span id="totalAnalyses">0</span></p>
+    <p><b>Diseases Detected:</b> <span id="diseasesDetected">0</span></p>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settings" class="content">
+    <h2>⚙️ Settings</h2>
+
+    <label>Select Language</label>
+    <select id="languageSelect">
+      <option value="en">English</option>
+      <option value="te">Telugu</option>
+      <option value="hi">Hindi</option>
+    </select>
+  </div>
+
+</div>
+
+<script>
+  // ---------------------------
+  // TAB SWITCH FIX
+  // ---------------------------
+  function showTab(e, tabName) {
+    document.querySelectorAll('.content').forEach(el => el.classList.remove('active'))
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'))
+
+    document.getElementById(tabName).classList.add('active')
+    if (e && e.currentTarget) e.currentTarget.classList.add('active')
+  }
+
+  // ---------------------------
+  // ELEMENTS
+  // ---------------------------
+  const fileInput = document.getElementById("fileInput")
+  const preview = document.getElementById("preview")
+  const analyzeBtn = document.getElementById("analyzeBtn")
+  const uploadStatus = document.getElementById("uploadStatus")
+
+  const diseaseSpan = document.getElementById("disease")
+  const confidenceSpan = document.getElementById("confidence")
+  const recommendationSpan = document.getElementById("recommendation")
+
+  const speakBtn = document.getElementById("speakBtn")
+  const downloadPdfBtn = document.getElementById("downloadPdfBtn")
+
+  const totalAnalysesSpan = document.getElementById("totalAnalyses")
+  const diseasesDetectedSpan = document.getElementById("diseasesDetected")
+
+  const languageSelect = document.getElementById("languageSelect")
+
+  // voice
+  const startVoice = document.getElementById("startVoice")
+  const stopVoice = document.getElementById("stopVoice")
+  const voiceStatus = document.getElementById("voiceStatus")
+  const voiceText = document.getElementById("voiceText")
+
+  // global storage
+  window._lastResultText = ""
+
+  function formatRecommendationText(recommendation, process) {
+    if (!recommendation || typeof recommendation !== "object") {
+      return String(recommendation || "No recommendation")
+    }
+
+    const lines = []
+    for (const [key, value] of Object.entries(recommendation)) {
+      if (value === null || value === undefined || value === "") continue
+      if (Array.isArray(value)) {
+        lines.push(`${key}: ${value.join("; ")}`)
+      } else if (typeof value === "object") {
+        for (const [nestedKey, nestedValue] of Object.entries(value)) {
+          if (nestedValue !== null && nestedValue !== undefined && nestedValue !== "") {
+            lines.push(`${key}.${nestedKey}: ${nestedValue}`)
+          }
+        }
+      } else {
+        lines.push(`${key}: ${value}`)
+      }
+    }
+
+    if (Array.isArray(process) && process.length > 0) {
+      lines.push("complete_process: " + process.join(" | "))
+    }
+
+    return lines.length > 0 ? lines.join("\n") : "No recommendation"
+  }
+
+  // ---------------------------
+  // IMAGE PREVIEW
+  // ---------------------------
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files[0]
+
+    if (!file) {
+      preview.style.display = "none"
+      return
+    }
+
+    preview.src = URL.createObjectURL(file)
+    preview.style.display = "block"
+
+    uploadStatus.textContent = "✅ Image selected"
+    uploadStatus.className = "active success"
+  })
+
+  // ---------------------------
+  // ANALYZE IMAGE
+  // ---------------------------
+  analyzeBtn.addEventListener("click", async () => {
+    const file = fileInput.files[0]
+
+    if (!file) {
+      uploadStatus.textContent = "❌ Please select an image first!"
+      uploadStatus.className = "active error"
+      return
+    }
+
+    uploadStatus.textContent = "⏳ Analyzing image..."
+    uploadStatus.className = "active"
+    analyzeBtn.disabled = true
+
+    const formData = new FormData()
+    formData.append("image", file)
+
+    try {
+      const res = await fetch("/predict", {
+        method: "POST",
+        body: formData
+      })
+
+      if (!res.ok) throw new Error("Server error: " + res.status)
+
+      let data
+      try {
+        data = await res.json()
+      } catch {
+        throw new Error("Invalid JSON response from server")
+      }
+
+      const disease = data.disease || "Unknown"
+      const recommendation = data.recommendation || "No recommendation"
+      const confidence = Number.isFinite(Number(data.confidence)) ? Number(data.confidence) : 0
+      const recommendationText = formatRecommendationText(recommendation, data.complete_treatment_process)
+
+      diseaseSpan.textContent = disease
+      confidenceSpan.textContent = (confidence * 100).toFixed(1) + "%"
+      recommendationSpan.textContent = recommendationText
+
+      // global storage
+      window._lastResultData = data
+      window._lastResultText = `Disease: ${disease}. Confidence: ${(confidence * 100).toFixed(1)} percent. Recommendation: ${recommendationText}`
+
+      uploadStatus.textContent = "✅ Analysis completed!"
+      uploadStatus.className = "active success"
+
+      loadStats()
+
+    } catch (err) {
+      uploadStatus.textContent = "❌ " + err.message
+      uploadStatus.className = "active error"
+    } finally {
+      analyzeBtn.disabled = false
+    }
+  })
+
+  // ---------------------------
+  // SPEAK RESULT
+  // ---------------------------
+  speakBtn.addEventListener("click", () => {
+    if (!window._lastResultText || window._lastResultText.length < 5) {
+      alert("🔊 No valid analysis result to speak!")
+      return
+    }
+
+    const utter = new SpeechSynthesisUtterance(window._lastResultText)
+    utter.lang = languageSelect.value === "te" ? "te-IN" :
+                languageSelect.value === "hi" ? "hi-IN" : "en-US"
+    speechSynthesis.speak(utter)
+  })
+
+  // ---------------------------
+  // DOWNLOAD PDF
+  // ---------------------------
+  downloadPdfBtn.addEventListener("click", async () => {
+    if (!window._lastResultData) {
+      alert("❌ No analysis result to generate report!")
+      return
+    }
+    try {
+      const res = await fetch("/report/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(window._lastResultData)
+      })
+
+      if (!res.ok) throw new Error("PDF generation failed")
+
+      const data = await res.json()
+      if (data.file) {
+        const link = document.createElement("a")
+        link.href = "/uploads/" + data.file
+        // Use the filename from server
+        link.download = data.file
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+      }
+
+    } catch (err) {
+      alert("❌ " + err.message)
+    }
+  })
+
+  // ---------------------------
+  // LOAD STATS
+  // ---------------------------
+  async function loadStats() {
+    try {
+      const res = await fetch("/dashboard")
+      if (!res.ok) return
+
+      const stats = await res.json()
+
+      totalAnalysesSpan.textContent = stats.total_analyses ?? stats.total ?? 0
+      diseasesDetectedSpan.textContent = stats.disease_detected ?? stats.detected ?? 0
+
+    } catch (e) {
+      // ignore stats errors
+    }
+  }
+
+  // ---------------------------
+  // VOICE INPUT (SpeechRecognition)
+  // ---------------------------
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  let recognition = null
+  let isRecognizing = false
+
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition()
+    recognition.lang = "en-US"
+    recognition.interimResults = false
+
+    recognition.onstart = () => {
+      isRecognizing = true
+      voiceStatus.textContent = "🎙 Listening..."
+      startVoice.disabled = true
+      stopVoice.disabled = false
+    }
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript
+      voiceText.textContent = transcript
+      voiceStatus.textContent = "✅ Voice captured!"
+    }
+
+    recognition.onerror = (event) => {
+      console.error("Speech Recognition Error:", event.error)
+      let msg = event.error
+      if (event.error === 'not-allowed') msg = "Microphone access denied"
+      if (event.error === 'network') msg = "Network error"
+      
+      voiceStatus.textContent = "❌ Error: " + msg
+      isRecognizing = false
+      startVoice.disabled = false
+      stopVoice.disabled = true
+    }
+
+    recognition.onend = () => {
+      isRecognizing = false
+      startVoice.disabled = false
+      stopVoice.disabled = true
+      if (voiceStatus.textContent === "🎙 Listening...") {
+        voiceStatus.textContent = "Status: Ready"
+      }
+    }
+
+    startVoice.addEventListener("click", () => {
+      try {
+        if (!isRecognizing) {
+          recognition.start()
+        }
+      } catch (err) {
+        console.error("Recognition start error:", err)
+        voiceStatus.textContent = "❌ Error starting: " + err.message
+      }
+    })
+
+    stopVoice.addEventListener("click", () => {
+      try {
+        recognition.stop()
+      } catch (err) {
+        console.error("Recognition stop error:", err)
+      }
+    })
+
+  } else {
+    startVoice.disabled = true
+    stopVoice.disabled = true
+    voiceStatus.textContent = "❌ Voice recognition not supported in this browser"
+  }
+
+  // initial stats
+  loadStats()
+</script>
+
+</body>
+</html>
