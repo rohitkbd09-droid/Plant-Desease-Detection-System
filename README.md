@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Smart Plant Disease Detection and Recommendation System
 
 Minimal scaffold for the Smart Plant Disease Detection project.
@@ -34,3 +35,6 @@ Use the training script in `ml/train.py`. Provide a dataset folder organized by 
 ```powershell
 python ml\train.py --data_dir path\to\dataset --epochs 10
 ```
+=======
+# plant-disease-detection
+>>>>>>> d54bd265931fb9706132cb06731b3258ab44e5f3
