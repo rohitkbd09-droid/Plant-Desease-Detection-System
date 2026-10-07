@@ -291,8 +291,16 @@
       <p><b>Disease:</b> <span id="disease">-</span></p>
       <p><b>Confidence:</b> <span id="confidence">-</span></p>
       <p><b>Recommendation:</b> <span id="recommendation">-</span></p>
-
+      <div class="speech-settings">
+        <label for="readLanguageSelect">Read in:</label>
+        <select id="readLanguageSelect">
+          <option value="en">English</option>
+          <option value="te">Telugu</option>
+          <option value="hi">Hindi</option>
+        </select>
+      </div>
       <button id="speakBtn">🔊 Speak Result</button>
+      <button id="stopSpeechBtn" disabled>⏹ Stop Speaking</button>
       <button id="downloadPdfBtn">📄 Download Report</button>
     </div>
   </div>
@@ -356,6 +364,8 @@
   const recommendationSpan = document.getElementById("recommendation")
 
   const speakBtn = document.getElementById("speakBtn")
+  const stopSpeechBtn = document.getElementById("stopSpeechBtn")
+  const readLanguageSelect = document.getElementById("readLanguageSelect")
   const downloadPdfBtn = document.getElementById("downloadPdfBtn")
 
   const totalAnalysesSpan = document.getElementById("totalAnalyses")
@@ -372,37 +382,98 @@
   // global storage
   window._lastResultText = ""
 
-  function formatRecommendationText(recommendation, process) {
+  const recommendationLabels = {
+    en: {
+      pesticide: "Pesticide",
+      alternativePesticides: "Alternative pesticides",
+      fertilizer: "Fertilizer",
+      alternativeFertilizers: "Alternative fertilizers",
+      treatmentSteps: "Treatment steps:",
+      noRecommendation: "No recommendation"
+    },
+    hi: {
+      pesticide: "कीटनाशक",
+      alternativePesticides: "वैकल्पिक कीटनाशक",
+      fertilizer: "उर्वरक",
+      alternativeFertilizers: "वैकल्पिक उर्वरक",
+      treatmentSteps: "उपचार चरण:",
+      noRecommendation: "कोई सिफ़ारिश नहीं"
+    },
+    te: {
+      pesticide: "పెస్టిసైడ్",
+      alternativePesticides: "వికల్పిక పెస్టిసైడ్లు",
+      fertilizer: "సారము",
+      alternativeFertilizers: "వికల్పిక సారాలు",
+      treatmentSteps: "చికిత్స దశలు:",
+      noRecommendation: "సిఫార్సు లేదు"
+    }
+  }
+
+  function getRecommendationLabel(lang) {
+    return recommendationLabels[lang] || recommendationLabels.en
+  }
+
+  function formatRecommendationText(recommendation, process, lang = "en") {
     if (!recommendation || typeof recommendation !== "object") {
-      return String(recommendation || "No recommendation")
+      return String(recommendation || getRecommendationLabel(lang).noRecommendation)
     }
 
+    const labels = getRecommendationLabel(lang)
     const lines = []
-    for (const [key, value] of Object.entries(recommendation)) {
-      if (value === null || value === undefined || value === "") continue
-      if (Array.isArray(value)) {
-        lines.push(`${key}: ${value.join("; ")}`)
-      } else if (typeof value === "object") {
-        for (const [nestedKey, nestedValue] of Object.entries(value)) {
-          if (nestedValue !== null && nestedValue !== undefined && nestedValue !== "") {
-            lines.push(`${key}.${nestedKey}: ${nestedValue}`)
-          }
-        }
-      } else {
-        lines.push(`${key}: ${value}`)
-      }
+    const primaryPesticide = recommendation.pesticide || (recommendation.pesticide_recommendation && recommendation.pesticide_recommendation.product)
+    const primaryFertilizer = recommendation.fertilizer || (recommendation.fertilizer_recommendation && recommendation.fertilizer_recommendation.product)
+
+    if (primaryPesticide) {
+      lines.push(`${labels.pesticide}: ${primaryPesticide}`)
+    }
+
+    const altPesticides = Array.isArray(recommendation.alternative_pesticides)
+      ? recommendation.alternative_pesticides.map(item => item.name || item.product || item).filter(Boolean)
+      : []
+    if (altPesticides.length > 0) {
+      lines.push(`${labels.alternativePesticides}: ${altPesticides.slice(0, 2).join(", ")}`)
+    }
+
+    if (primaryFertilizer) {
+      lines.push(`${labels.fertilizer}: ${primaryFertilizer}`)
+    }
+
+    const altFertilizers = Array.isArray(recommendation.alternative_fertilizers)
+      ? recommendation.alternative_fertilizers.map(item => item.name || item.product || item).filter(Boolean)
+      : []
+    if (altFertilizers.length > 0) {
+      lines.push(`${labels.alternativeFertilizers}: ${altFertilizers.slice(0, 1).join(", ")}`)
     }
 
     if (Array.isArray(process) && process.length > 0) {
-      lines.push("complete_process: " + process.join(" | "))
+      lines.push(labels.treatmentSteps)
+      process.slice(0, 5).forEach((step, index) => {
+        const cleanStep = String(step).replace(/^Step \d+: ?/, "")
+        lines.push(`${index + 1}. ${cleanStep}`)
+      })
     }
 
-    return lines.length > 0 ? lines.join("\n") : "No recommendation"
+    return lines.length > 0 ? lines.join("\n") : labels.noRecommendation
+  }
+
+  function getSelectedReadLanguage() {
+    return (readLanguageSelect && readLanguageSelect.value) || "en"
+  }
+
+  function renderRecommendation(recommendation, process) {
+    return formatRecommendationText(recommendation, process, getSelectedReadLanguage())
+  }
+
+  function updateRecommendationDisplay(data) {
+    const rec = data.recommendation || data.recommendations || {}
+    const proc = data.complete_treatment_process || data.step_by_step_treatment || []
+    const text = renderRecommendation(rec, proc)
+    recommendationSpan.textContent = text
+    window._lastResultText = `Disease: ${data.disease || "Unknown"}. Confidence: ${Number.isFinite(Number(data.confidence)) ? (Number(data.confidence) * 100).toFixed(1) : "0.0"}%`
   }
 
   // ---------------------------
   // IMAGE PREVIEW
-  // ---------------------------
   fileInput.addEventListener("change", () => {
     const file = fileInput.files[0]
 
@@ -417,6 +488,14 @@
     uploadStatus.textContent = "✅ Image selected"
     uploadStatus.className = "active success"
   })
+
+  if (readLanguageSelect) {
+    readLanguageSelect.addEventListener("change", () => {
+      if (window._lastResultData) {
+        updateRecommendationDisplay(window._lastResultData)
+      }
+    })
+  }
 
   // ---------------------------
   // ANALYZE IMAGE
@@ -453,9 +532,9 @@
       }
 
       const disease = data.disease || "Unknown"
-      const recommendation = data.recommendation || "No recommendation"
+      const recommendation = data.recommendation || {}
       const confidence = Number.isFinite(Number(data.confidence)) ? Number(data.confidence) : 0
-      const recommendationText = formatRecommendationText(recommendation, data.complete_treatment_process)
+      const recommendationText = renderRecommendation(recommendation, data.complete_treatment_process)
 
       diseaseSpan.textContent = disease
       confidenceSpan.textContent = (confidence * 100).toFixed(1) + "%"
@@ -487,10 +566,38 @@
       return
     }
 
+    if (speechSynthesis.speaking) {
+      speechSynthesis.cancel()
+    }
+
     const utter = new SpeechSynthesisUtterance(window._lastResultText)
-    utter.lang = languageSelect.value === "te" ? "te-IN" :
-                languageSelect.value === "hi" ? "hi-IN" : "en-US"
+    const selectedLang = (readLanguageSelect && readLanguageSelect.value) || (languageSelect && languageSelect.value) || "en"
+    utter.lang = selectedLang === "te" ? "te-IN" : selectedLang === "hi" ? "hi-IN" : "en-US"
+
+    utter.onstart = () => {
+      stopSpeechBtn.disabled = false
+      speakBtn.textContent = "🔊 Speaking..."
+    }
+
+    utter.onend = () => {
+      stopSpeechBtn.disabled = true
+      speakBtn.textContent = "🔊 Speak Result"
+    }
+
+    utter.onerror = () => {
+      stopSpeechBtn.disabled = true
+      speakBtn.textContent = "🔊 Speak Result"
+    }
+
     speechSynthesis.speak(utter)
+  })
+
+  stopSpeechBtn.addEventListener("click", () => {
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+      speechSynthesis.cancel()
+      stopSpeechBtn.disabled = true
+      speakBtn.textContent = "🔊 Speak Result"
+    }
   })
 
   // ---------------------------
